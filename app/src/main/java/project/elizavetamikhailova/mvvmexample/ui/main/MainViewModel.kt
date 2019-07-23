@@ -1,5 +1,6 @@
 package project.elizavetamikhailova.mvvmexample.ui.main
 
+import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -30,15 +31,18 @@ class MainViewModel @Inject constructor(var categoryRepository: CategoryReposito
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object: DisposableObserver<List<Category>>() {
             override fun onError(e: Throwable) {
-
+                Log.i("EXAMPLE", e.localizedMessage)
+                Log.i("EXAMPLE", e.message)
             }
 
             override fun onNext(data: List<Category>) {
+                Log.i("EXAMPLE", data.toString())
                 categories.value = data
             }
 
             override fun onComplete() {
                 isLoading.set(false)
+                connect.set(true) //!!
             }
         })
     }

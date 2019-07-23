@@ -3,8 +3,9 @@ package project.elizavetamikhailova.mvvmexample
 import dagger.Component
 import dagger.android.AndroidInjector
 import dagger.android.support.AndroidSupportInjectionModule
-import project.elizavetamikhailova.mvvmexample.ui.main.MainActivityModule
+import project.elizavetamikhailova.mvvmexample.utility.di.modules.MainActivityModule
 import project.elizavetamikhailova.mvvmexample.utility.di.ViewModelBuilder
+import project.elizavetamikhailova.mvvmexample.utility.di.modules.DataBaseModule
 import javax.inject.Singleton
 
     @Singleton
@@ -12,7 +13,8 @@ import javax.inject.Singleton
         modules = [AndroidSupportInjectionModule::class,
             AppModule::class,
             ViewModelBuilder::class,
-            MainActivityModule::class]
+            MainActivityModule::class,
+            DataBaseModule::class]
     )
     interface AppComponent : AndroidInjector<ModernApplication> {
 
