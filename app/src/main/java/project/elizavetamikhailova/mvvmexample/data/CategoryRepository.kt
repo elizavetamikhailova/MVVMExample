@@ -26,4 +26,20 @@ class CategoryRepository @Inject constructor(var networkManager: NetworkManager,
 
         return localDataSource.getCategories()
     }
+
+    private fun search(categories : List<Category>, textToSearch : String) : List<Category>{ //взять лист из локального или удаленного источника
+        val list = ArrayList<Category>(categories)
+        val lowerTextToSearch = " " + textToSearch.toLowerCase()
+        val words = lowerTextToSearch.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        words.map { word ->  categories.map { category ->  if(!category.tablesInBgu.toLowerCase().contains(word)) list.remove(category)}}
+        return list.toList()
+    }
+
+
+    fun getSearchedCategories(categories : List<Category>, textToSearch : String): Observable<List<Category>> {
+        return Observable.create { emitter ->
+            emitter.onNext(search(categories, textToSearch))
+            emitter.onComplete()
+        }
+    }
 }

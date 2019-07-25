@@ -1,6 +1,5 @@
 package project.elizavetamikhailova.mvvmexample.ui.main
 
-import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,6 @@ import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import project.elizavetamikhailova.mvvmexample.data.CategoryRepository
 import project.elizavetamikhailova.mvvmexample.ui.uimodels.Category
-import project.elizavetamikhailova.mvvmexample.utility.extension.plusAssign
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(var categoryRepository: CategoryRepository) : ViewModel() {
@@ -19,32 +17,54 @@ class MainViewModel @Inject constructor(var categoryRepository: CategoryReposito
 
     var categories = MutableLiveData<List<Category>>()
 
-    val connect = ObservableField(false)
+    var protectedCategories : MutableList<Category> = mutableListOf()
+
+    val connect = ObservableField(true)
 
     private val compositeDisposable = CompositeDisposable()
 
-    fun loadRepositories() {
+    fun loadCategories() {
         connect.set(categoryRepository.networkManager.isConnectedToInternet)
         isLoading.set(true)
-        compositeDisposable += categoryRepository.getCategories()
+        compositeDisposable.add(categoryRepository.getCategories()
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(object: DisposableObserver<List<Category>>() {
-            override fun onError(e: Throwable) {
-                Log.i("EXAMPLE", e.localizedMessage)
-                Log.i("EXAMPLE", e.message)
-            }
+                override fun onError(e: Throwable) {
+                }
+                override fun onNext(data: List<Category>) {
+                    categories.value = data
+                    protectedCategories.addAll(data)
+                }
+                override fun onComplete() {
+                    isLoading.set(false)
+                    connect.set(true)
+                }
+            }))
+    }
 
-            override fun onNext(data: List<Category>) {
-                Log.i("EXAMPLE", data.toString())
-                categories.value = data
-            }
-
-            override fun onComplete() {
-                isLoading.set(false)
-                connect.set(true) //!!
-            }
-        })
+    fun searchCategories(text : CharSequence){
+        val textToSearch = text.toString()
+        if(textToSearch != "" && categories.value != null){
+            isLoading.set(true)
+            categories.value = protectedCategories
+            compositeDisposable.add(categoryRepository.getSearchedCategories(categories.value!!, textToSearch)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object  : DisposableObserver<List<Category>>(){
+                    override fun onComplete() {
+                        isLoading.set(false)
+                    }
+                    override fun onNext(t: List<Category>) {
+                        categories.value = t
+                    }
+                    override fun onError(e: Throwable) {
+                        isLoading.set(false)
+                    }
+                }))
+        }else{
+            loadCategories()
+        }
     }
 
     override fun onCleared() {
